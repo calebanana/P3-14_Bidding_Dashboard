@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
   bidding_db:
-    image: mongo
+    image: mongo:4.4
     volumes:
       - mongo-volume:/data/db
     container_name: BiddingDB
