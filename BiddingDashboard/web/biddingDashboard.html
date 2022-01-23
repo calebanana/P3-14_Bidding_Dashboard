@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bidding Dashboard</title>
+    <style>
+        h1, h2, p {
+            width: 100%;
+            text-align: center;
+        }
+
+        table {
+            border: 1px solid black;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome, {{.Student_ID}}</h1>
+    <h2>You have {{.ETI_Tokens}} tokens</h2>
+    <hr>
+    <h1>Available Classes</h1>
+    <p>Next semester starts on {{.NextMon}}</p>
+    <div>
+        <button>YEET</button>
+        <button>YEEEET</button>
+        <br><br>
+        <table>
+            <tr>
+                <th>Module Code</th>
+                <th>Module Name</th>
+                <th>Class No.</th>
+                <th>Capacity</th>
+                <th>Schedule</th>
+                <th>Tutor</th>
+                <th>Your Bid</th>
+                <th>All Bids</th>
+            </tr>
+            {{ with .SemesterModules }}
+                {{ range . }}
+                    <tr>
+                        <td>{{ .ModuleCode }}</td>
+                        <td>{{ .ModuleName }}</td>
+                        <td>{{ len .ModuleClasses }}</td>
+                        <td>Yes</td>
+                        <td>25 Jan 2022 10:00</td>
+                        <td>John Doe</td>
+                        <td>Edit</td>
+                        <td>View</td>
+                    </tr>
+                {{ end }}
+            {{ end }}
+        </table>
+    </div>
+    <br><br>
+    <a href="/">
+        <button>Log Out</button>
+    </a>
+</body>
+</html>
