@@ -38,7 +38,7 @@ type Semester struct {
 func GetAllBids(inputSemStartDate string, inputClassCode string, inputStudentId string) Semester{
 
 	fmt.Println( inputSemStartDate, inputStudentId, inputClassCode)
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://bidding_db:27017"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func GetAllBids(inputSemStartDate string, inputClassCode string, inputStudentId 
 		log.Fatal(err)
 	}
 	defer client.Disconnect(ctx)
-	biddingDB := client.Database("testdb")
+	biddingDB := client.Database("BiddingDB")
 	semCollection := biddingDB.Collection(inputSemStartDate)
 
 	cursor, err := semCollection.Find(ctx, bson.M{})
@@ -136,7 +136,7 @@ func GetAllBids(inputSemStartDate string, inputClassCode string, inputStudentId 
 }
 
 func AddNewSemester(inputSemStartDate string) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://bidding_db:27017"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -146,7 +146,7 @@ func AddNewSemester(inputSemStartDate string) {
 		log.Fatal(err)
 	}
 	defer client.Disconnect(ctx)
-	biddingDB := client.Database("testdb")
+	biddingDB := client.Database("BiddingDB")
 	newCollection := biddingDB.Collection(inputSemStartDate)
 
 	adb, _ := newCollection.InsertOne(ctx, bson.D{
@@ -190,7 +190,7 @@ func AddNewSemester(inputSemStartDate string) {
 }
 
 func AddNewBid(inputSemStartDate string, inputClassCode string, inputStudentId string, inputBidAmt int32) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://bidding_db:27017"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -200,7 +200,7 @@ func AddNewBid(inputSemStartDate string, inputClassCode string, inputStudentId s
 		log.Fatal(err)
 	}
 	defer client.Disconnect(ctx)
-	biddingDB := client.Database("testdb")
+	biddingDB := client.Database("BiddingDB")
 	semCollection := biddingDB.Collection(inputSemStartDate)
 
 	_, err = semCollection.UpdateOne(

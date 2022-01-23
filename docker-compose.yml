@@ -1,0 +1,32 @@
+version: '3.3'
+
+services:
+  bidding_db:
+    image: mongo
+    restart: always
+    volumes:
+      - ./mongo-volume:/data/db
+    container_name: BiddingDB
+    ports:
+      - 27017:27017
+
+  bidding_dashboard:
+    depends_on:
+      - bidding_db
+    build:
+      context: ./BiddingDashboard
+    container_name: BiddingDashboard
+    ports:
+      - 8220:8220
+
+  bidding_api:
+    depends_on:
+      - bidding_db
+    build:
+      context: ./BiddingAPI
+    container_name: BiddingAPI
+    ports:
+      - 8221:8221
+
+volumes:
+  mongo-volume:

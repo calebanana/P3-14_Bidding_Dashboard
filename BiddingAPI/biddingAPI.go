@@ -88,7 +88,7 @@ func bid(w http.ResponseWriter, r *http.Request) {
 		// 		json.Unmarshal(reqBody, &editBid)
 		// 		EditBid(querySemStart, queryClassCode, queryStudentId, editBid.BidAmt)
 		// 	}
-		// }
+		}
 	}
 }
 

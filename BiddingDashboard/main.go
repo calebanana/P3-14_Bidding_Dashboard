@@ -116,6 +116,6 @@ func main() {
 	router.HandleFunc("/editBid/{moduleCode}/{classNum}", editBid)
 	router.HandleFunc("/viewAll/{moduleCode}/{classNum}", viewBid)
 
-	fmt.Println("Listening on port 8020")
+	fmt.Println("Listening on port 8220")
 	http.ListenAndServe(":8220", router)
 }
