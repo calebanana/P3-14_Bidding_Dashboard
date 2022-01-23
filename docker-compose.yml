@@ -5,7 +5,7 @@ services:
     image: mongo
     restart: always
     volumes:
-      - ./mongo-volume:/data/db
+      - mongo-volume:/data/db
     container_name: BiddingDB
     ports:
       - 27017:27017
