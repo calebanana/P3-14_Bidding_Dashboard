@@ -8,7 +8,7 @@ services:
       - mongo-volume:/data/db
     container_name: BiddingDB
     ports:
-      - 8222:8222
+      - 8222:27017
 
   bidding_dashboard:
     depends_on:
