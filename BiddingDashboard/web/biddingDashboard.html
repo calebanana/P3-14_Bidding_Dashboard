@@ -4,66 +4,232 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bidding Dashboard</title>
     <style>
-        h1, h2, p {
+        * {
+            font-family: "Comic Sans MS", cursive, sans-serif;
+        }
+
+        h1, h2, p, div {
             width: 100%;
             text-align: center;
         }
 
         table {
-            border: 1px solid black;
+            border: 2px solid black;
             border-collapse: collapse;
             width: 100%;
         }
 
         th, td {
-            border: 1px solid black;
+            border: 2px solid black;
             padding: 10px;
             text-align: center;
         }
+
+        #module, #schedule {
+            min-width: none;
+            max-width: 120px;
+        }
+
+        #redText {
+            color: red;
+        }
+
+        select {
+            height: 50px;
+            width: 100px;
+            font-size: 20px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        #logout {
+            width: 100% !important;
+            font-size: 30px;
+            text-align: center;
+            padding: 5px;
+        }
+
+        .glow-on-hover {
+            padding: 10px;
+            height: 50px;
+            border: none;
+            outline: none;
+            color: #fff;
+            background: #111;
+            cursor: pointer;
+            position: relative;
+            z-index: 0;
+            border-radius: 10px;
+        }
+
+        .glow-on-hover:before {
+            content: '';
+            background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+            position: absolute;
+            top: -2px;
+            left:-2px;
+            background-size: 400%;
+            z-index: -1;
+            filter: blur(5px);
+            width: calc(100% + 4px);
+            height: calc(100% + 4px);
+            animation: glowing 20s linear infinite;
+            opacity: 0;
+            transition: opacity .3s ease-in-out;
+            border-radius: 10px;
+        }
+
+        .glow-on-hover:active {
+            color: #000
+        }
+
+        .glow-on-hover:active:after {
+            background: transparent;
+        }
+
+        .glow-on-hover:hover:before {
+            opacity: 1;
+        }
+
+        .glow-on-hover:after {
+            z-index: -1;
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #111;
+            left: 0;
+            top: 0;
+            border-radius: 10px;
+        }
+
+        @keyframes glowing {
+            0% { background-position: 0 0; }
+            50% { background-position: 400% 0; }
+            100% { background-position: 0 0; }
+        }
     </style>
+    <title>Bidding Dashboard</title>
 </head>
 <body>
-    <h1>Welcome, {{.Student_ID}}</h1>
-    <h2>You have {{.ETI_Tokens}} tokens</h2>
+    <h1>Welcome, {{.StudentID}}</h1>
+    <h2>You have {{.ETITokens}} tokens</h2>
     <hr>
     <h1>Available Classes</h1>
-    <p>Next semester starts on {{.NextMon}}</p>
+    <p>Next semester starts on <span id="redText"><b>{{.NextMon}}</b></span></p>
     <div>
-        <button>YEET</button>
-        <button>YEEEET</button>
+        <form method="POST">
+            <select name="moduleSearch">
+                <option value="all">All</option>
+                {{ range $mod := .SemInfo }}
+                    <option value="{{ $mod.ModuleCode }}">{{ $mod.ModuleCode }}</option>
+                {{ end }}
+            </select>
+            <button type="submit" class="glow-on-hover">Search</button>
+
+            {{ if eq .Filtered "true" }}
+                <a href="/biddingDashboard">
+                    <button class="glow-on-hover" type="button">View All Classes</button>
+                </a>
+            {{ else }}
+                <a href="/biddingDashboard?filtered=true">
+                    <button class="glow-on-hover" type="button">View Your Bids</button>
+                </a>
+            {{ end }}
+        </form>
         <br><br>
+    </div>
+    <div>
         <table>
             <tr>
                 <th>Module Code</th>
                 <th>Module Name</th>
-                <th>Class No.</th>
+                <th>Class Code</th>
                 <th>Capacity</th>
                 <th>Schedule</th>
                 <th>Tutor</th>
-                <th>Your Bid</th>
+                <th colspan="2">Your Bids</th>
                 <th>All Bids</th>
             </tr>
-            {{ with .SemesterModules }}
-                {{ range . }}
-                    <tr>
-                        <td>{{ .ModuleCode }}</td>
-                        <td>{{ .ModuleName }}</td>
-                        <td>{{ len .ModuleClasses }}</td>
-                        <td>Yes</td>
-                        <td>25 Jan 2022 10:00</td>
-                        <td>John Doe</td>
-                        <td>Edit</td>
-                        <td>View</td>
-                    </tr>
+            {{ $semBids := .SemBids }}
+            {{ range $moduleIndex, $module := .SemInfo }}
+                {{ range $classIndex, $class := $module.ModuleClasses }}
+                    {{ if eq $classIndex 0 }}
+                        <tr>
+                            <td id="module" rowspan="{{ len $module.ModuleClasses }}">{{ $module.ModuleCode }}</td>
+                            <td id="module" rowspan="{{ len $module.ModuleClasses }}">{{ $module.ModuleName }}</td>
+                            <td>{{ $class.ClassCode }}</td>
+                            <td>{{ $class.Capacity }}</td>
+                            <td id="schedule">{{ $class.Schedule }}</td>
+                            <td>{{ $class.Tutor }}</td>
+                            {{ if eq (len (index (index $semBids $moduleIndex).ModuleClasses $classIndex).ClassBids) 0}}
+                                <td>0</td>
+                                <td>
+                                    <a href="/editBid/{{$class.ClassCode}}">
+                                        <button>Add</button>
+                                    </a>
+                                </td>
+                            {{ else }}
+                                <td>{{ (index (index (index $semBids $moduleIndex).ModuleClasses $classIndex).ClassBids 0).BidAmt }}</td>
+                                <td>
+                                    <a href="/editBid/{{$class.ClassCode}}">
+                                        <button>Edit</button>
+                                    </a>
+                                </td>
+                            {{ end }}
+                            <td>
+                                <a href="/viewAll/{{$class.ClassCode}}">
+                                    <button>View</button>
+                                </a>
+                            </td>
+                        </tr>
+                    {{ else }}
+                        <tr>
+                            <td>{{ $class.ClassCode }}</td>
+                            <td>{{ $class.Capacity }}</td>
+                            <td>{{ $class.Schedule }}</td>
+                            <td>{{ $class.Tutor }}</td>
+                            {{ if eq (len (index (index $semBids $moduleIndex).ModuleClasses $classIndex).ClassBids) 0}}
+                                <td>0</td>
+                                <td>
+                                    <a href="/editBid/{{$class.ClassCode}}">
+                                        <button>Add</button>
+                                    </a>
+                                </td>
+                            {{ else }}
+                                <td>{{ (index (index (index $semBids $moduleIndex).ModuleClasses $classIndex).ClassBids 0).BidAmt }}</td>
+                                <td>
+                                    <a href="/editBid/{{$class.ClassCode}}">
+                                        <button>Edit</button>
+                                    </a>
+                                </td>
+                            {{ end }}
+                            <td>
+                                <a href="/viewAll/{{$class.ClassCode}}">
+                                    <button>
+                                        View
+                                    </button>
+                                </a>
+                            </td>
+                        </tr>
+                    {{ end }}
                 {{ end }}
+                {{ else }}
+                    <tr>
+                        <td colspan="9">
+                            <h1 id="redText">No Results</h1>
+                        </td>
+                    </tr>
             {{ end }}
         </table>
     </div>
     <br><br>
-    <a href="/">
-        <button>Log Out</button>
-    </a>
+    <div>
+        <a href="/">
+            <button class="glow-on-hover" type="button" id="logout">Log Out</button>
+        </a>
+    </div>
+    <br><br>
 </body>
 </html>

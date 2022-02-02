@@ -1,0 +1,221 @@
+{
+  "SemesterStartDate":"31-01-2022",
+  "SemesterModules":[
+    {
+      "ModuleCode":"CM",
+      "ModuleName":"Computing Mathematics",
+      "ModuleClasses":[
+        {
+          "ClassCode":"CM_01",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T001",
+          "Capacity":5
+        },
+        {
+          "ClassCode":"CM_02",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T001",
+          "Capacity":5
+        }
+      ]
+    },
+    {
+      "ModuleCode":"CSF",
+      "ModuleName":"Cyber Security Fundamentals",
+      "ModuleClasses":[
+        {
+          "ClassCode":"CSF_01",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T002",
+          "Capacity":5
+        },
+        {
+          "ClassCode":"CSF_02",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T002",
+          "Capacity":5
+        }
+      ]
+    },
+    {
+      "ModuleCode":"DP",
+      "ModuleName":"Design Principles",
+      "ModuleClasses":[
+        {
+          "ClassCode":"DP_01",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T003",
+          "Capacity":5
+        },
+        {
+          "ClassCode":"DP_02",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T003",
+          "Capacity":5
+        }
+      ]
+    },
+    {
+      "ModuleCode":"PRG1",
+      "ModuleName":"Programming 1",
+      "ModuleClasses":[
+        {
+          "ClassCode":"PRG1_01",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T004",
+          "Capacity":5
+        },
+        {
+          "ClassCode":"PRG1_02",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T004",
+          "Capacity":5
+        }
+      ]
+    },
+    {
+      "ModuleCode":"DB",
+      "ModuleName":"Databases",
+      "ModuleClasses":[
+        {
+          "ClassCode":"DB_01",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T005",
+          "Capacity":5
+        },
+        {
+          "ClassCode":"DB_02",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T005",
+          "Capacity":5
+        }
+      ]
+    },
+    {
+      "ModuleCode":"ID",
+      "ModuleName":"Interactive Development",
+      "ModuleClasses":[
+        {
+          "ClassCode":"ID_01",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T006",
+          "Capacity":5
+        },
+        {
+          "ClassCode":"ID_02",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T006",
+          "Capacity":5
+        }
+      ]
+    },
+    {
+      "ModuleCode":"OSNF",
+      "ModuleName":"Operating Systems and Networking Fundamentals",
+      "ModuleClasses":[
+        {
+          "ClassCode":"OSNF_01",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T007",
+          "Capacity":5
+        },
+        {
+          "ClassCode":"OSNF_02",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T007",
+          "Capacity":5
+        }
+      ]
+    },
+    {
+      "ModuleCode":"PRG2",
+      "ModuleName":"Programming 2",
+      "ModuleClasses":[
+        {
+          "ClassCode":"PRG2_01",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T008",
+          "Capacity":5
+        },
+        {
+          "ClassCode":"PRG2_02",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T008",
+          "Capacity":5
+        }
+      ]
+    },
+    {
+      "ModuleCode":"OOAD",
+      "ModuleName":"Object-Oriented Analysis and Design",
+      "ModuleClasses":[
+        {
+          "ClassCode":"OOAD_01",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T009",
+          "Capacity":5
+        },
+        {
+          "ClassCode":"OOAD_02",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T009",
+          "Capacity":5
+        }
+      ]
+    },
+    {
+      "ModuleCode":"WEB",
+      "ModuleName":"Web Application Development",
+      "ModuleClasses":[
+        {
+          "ClassCode":"WEB_01",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T010",
+          "Capacity":5
+        },
+        {
+          "ClassCode":"WEB_02",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T010",
+          "Capacity":5
+        }
+      ]
+    },
+    {
+      "ModuleCode":"PFD",
+      "ModuleName":"Portfolio Development",
+      "ModuleClasses":[
+        {
+          "ClassCode":"PFD_01",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T011",
+          "Capacity":5
+        },
+        {
+          "ClassCode":"PFD_02",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T011",
+          "Capacity":5
+        }
+      ]
+    },
+    {
+      "ModuleCode":"SDD",
+      "ModuleName":"Solutions Design and Development",
+      "ModuleClasses":[
+        {
+          "ClassCode":"SDD_01",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T012",
+          "Capacity":5
+        },
+        {
+          "ClassCode":"SDD_02",
+          "Schedule":"31-01-2022 10:00:00",
+          "Tutor":"T012",
+          "Capacity":5
+        }
+      ]
+    }
+  ]
+}

@@ -34,10 +34,10 @@ type Semester struct {
 	SemesterModules   []Module
 }
 
-func GetAllBids(inputSemStartDate string, inputClassCode string, inputStudentId string) Semester{
+func GetAllBids(inputSemStartDate string, inputClassCode string, inputStudentId string, filtered string) Semester{
 
-	fmt.Println( inputSemStartDate, inputStudentId, inputClassCode)
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://bidding_db:27017"))
+	fmt.Println(inputSemStartDate, inputStudentId, inputClassCode)
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -98,12 +98,14 @@ func GetAllBids(inputSemStartDate string, inputClassCode string, inputStudentId 
 				ClassBids: classBids,
 			}
 
-			if (len(class.ClassBids) == 0){
-				continue
+			if filtered == "true" {
+				if (len(class.ClassBids) == 0){
+					continue
+				}
 			}
 
 			if (inputClassCode != "") {
-				 if class.ClassCode == inputClassCode{
+				if class.ClassCode == inputClassCode{
 					moduleClasses = append(moduleClasses, class)
 				}
 			} else {
@@ -116,8 +118,15 @@ func GetAllBids(inputSemStartDate string, inputClassCode string, inputStudentId 
 			ModuleName: moduleName.(string),
 			ModuleClasses: moduleClasses,
 		}
+
+		if filtered == "true" {
+			if (len(module.ModuleClasses) == 0){
+				continue
+			}
+		}
+
 		if (inputClassCode != ""){
-			var inputModuleCode string = inputClassCode[:len(inputClassCode) - 2]
+			var inputModuleCode string = inputClassCode[:len(inputClassCode) - 3]
 			if module.ModuleCode == inputModuleCode{
 				semesterModules = append(semesterModules, module)
 			}
@@ -134,8 +143,8 @@ func GetAllBids(inputSemStartDate string, inputClassCode string, inputStudentId 
 	return semester
 }
 
-func AddNewSemester(inputSemStartDate string) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://bidding_db:27017"))
+func AddNewSemester(inputNewSemester Semester) {
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -146,50 +155,41 @@ func AddNewSemester(inputSemStartDate string) {
 	}
 	defer client.Disconnect(ctx)
 	biddingDB := client.Database("BiddingDB")
-	newCollection := biddingDB.Collection(inputSemStartDate)
+	newCollection := biddingDB.Collection(inputNewSemester.SemesterStartDate)
 
-	adb, _ := newCollection.InsertOne(ctx, bson.D{
-		{Key: "moduleCode", Value: "ADB"},
-		{Key: "moduleName", Value: "Advanced Databases"},
-		{Key: "moduleClasses", Value: bson.A{
-			bson.M{
-				"classCode": "ADB01",
-				"classBids": bson.A{
-				},
+	for moduleIndex, module := range inputNewSemester.SemesterModules{
+		newModule, _ := newCollection.InsertOne(ctx, bson.D{
+			{Key: "moduleCode", Value: module.ModuleCode},
+			{Key: "moduleName", Value: module.ModuleName},
+			{Key: "moduleClasses", Value: bson.A{
 			},
-			bson.M{
-				"classCode": "ADB02",
-				"classBids": bson.A{
-				},
 			},
-		},
-		},
-	})
+		})
 
-	dl, _ := newCollection.InsertOne(ctx, bson.D{
-		{Key: "moduleCode", Value: "DL"},
-		{Key: "moduleName", Value: "Deep Learning"},
-		{Key: "moduleClasses", Value: bson.A{
-			bson.M{
-				"classCode": "DL01",
-				"classBids": bson.A{
-				},
-			},
-			bson.M{
-				"classCode": "DL02",
-				"classBids": bson.A{
-				},
-			},
-		},
-		},
-	})
+		fmt.Println(newModule.InsertedID)
 
-	fmt.Println(adb.InsertedID)
-	fmt.Println(dl.InsertedID)
+		for _, class := range inputNewSemester.SemesterModules[moduleIndex].ModuleClasses{
+			result, _ := newCollection.UpdateOne(
+				ctx,
+				bson.M{"moduleCode": module.ModuleCode},
+				bson.D{
+					{"$push", bson.M{"moduleClasses": bson.M{
+						"classCode": class.ClassCode,
+						"classBids": bson.A{
+						},
+					},
+					},
+					},
+				},
+			)
+		
+			fmt.Println("Classes added: ", result.ModifiedCount)
+		}
+	}
 }
 
 func AddNewBid(inputSemStartDate string, inputClassCode string, inputStudentId string, inputBidAmt int32) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://bidding_db:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -202,7 +202,7 @@ func AddNewBid(inputSemStartDate string, inputClassCode string, inputStudentId s
 	biddingDB := client.Database("BiddingDB")
 	semCollection := biddingDB.Collection(inputSemStartDate)
 
-	_, err = semCollection.UpdateOne(
+	result, err := semCollection.UpdateOne(
 		ctx,
 		bson.M{"moduleClasses.classCode": inputClassCode},
 		bson.D{
@@ -214,60 +214,79 @@ func AddNewBid(inputSemStartDate string, inputClassCode string, inputStudentId s
 			}},
 		},
 	)
+
+	fmt.Println("Documents added: ", result.ModifiedCount)
 }
 
-// func EditBid(inputSemStartDate string, inputClassCode string, inputStudentId string, newBidAmt int32) {
-// 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-// 	err = client.Connect(ctx)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer client.Disconnect(ctx)
-// 	biddingDB := client.Database("testdb")
-// 	semCollection := biddingDB.Collection(inputSemStartDate)
+func EditBid(inputSemStartDate string, inputClassCode string, inputStudentId string, inputBidAmt int32) {
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer client.Disconnect(ctx)
+	biddingDB := client.Database("BiddingDB")
+	semCollection := biddingDB.Collection(inputSemStartDate)
 
-// 	unwind1 := bson.D{{"$unwind", "moduleClasses"}}
-// 	cursor, err := semCollection.Aggregate(ctx, mongo.Pipeline{unwind1})
-// 	if err != nil {
-//     	panic(err)
-// 	}
-// 	var data []bson.M
-// 	if err = cursor.All(ctx, &data); err != nil {
-//     	panic(data)
-// 	}
-// 	fmt.Println(showsWithInfo)
+	inputModuleCode := inputClassCode[:len(inputClassCode) - 3]
+	filter := bson.D{{"moduleCode", inputModuleCode}}
+	update := bson.D{
+		{"$set", bson.D{
+			{"moduleClasses.$[class].classBids.$[bid].bidAmt", inputBidAmt},
+		}},
+	}
+	opts := options.Update().SetArrayFilters(options.ArrayFilters{
+        Filters: []interface{}{
+			bson.M{"class.classCode": inputClassCode},
+			bson.M{"bid.studentID": inputStudentId},
+		},
+    })
 
-// 	// _, err = semCollection.UpdateOne(
-// 	// 	ctx,
-// 	// 	bson.M{"moduleClasses.classCode": inputClassCode, "moduleClasses.classBids.studentID": inputStudentId},
-// 	// 	bson.D{
-// 	// 		{"$set", bson.M{"moduleClasses.$.classBids.studentID": bson.D{
-// 	// 			{Key: "studentID", Value: inputStudentId},
-// 	// 			{Key: "bidAmt", Value: newBidAmt},
-// 	// 			{Key: "bidStatus", Value: "Pending"},
-// 	// 		},
-// 	// 		}},
-// 	// 	},
-// 	// )
-// }
+	result, err := semCollection.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// func DeleteBid(inputSemStartDate string, inputClassCode string, inputStudentId string, newBidAmt int32) {
-// 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-// 	err = client.Connect(ctx)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer client.Disconnect(ctx)
-// 	biddingDB := client.Database("testdb")
-// 	semCollection := biddingDB.Collection(inputSemStartDate)
+	fmt.Println("Documents modified: ", result.ModifiedCount)
+}
 
+func DeleteBid(inputSemStartDate string, inputClassCode string, inputStudentId string) {
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer client.Disconnect(ctx)
+	biddingDB := client.Database("BiddingDB")
+	semCollection := biddingDB.Collection(inputSemStartDate)
 	
-// }
+	inputModuleCode := inputClassCode[:len(inputClassCode) - 3]
+	filter := bson.D{{"moduleCode", inputModuleCode}}
+	update := bson.D{
+		{"$pull", bson.D{
+			{"moduleClasses.$[class].classBids", bson.D{
+				{"studentID", inputStudentId},
+			}},
+		}},
+	}
+	opts := options.Update().SetArrayFilters(options.ArrayFilters{
+        Filters: []interface{}{
+			bson.M{"class.classCode": inputClassCode},
+		},
+    })
+
+	result, err := semCollection.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Documents deleted: ", result.ModifiedCount)
+}
