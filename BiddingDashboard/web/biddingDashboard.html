@@ -129,11 +129,11 @@
             <button type="submit" class="glow-on-hover">Search</button>
 
             {{ if eq .Filtered "true" }}
-                <a href="/biddingDashboard">
+                <a href="/biddingDashboard//{{ .StudentID }}">
                     <button class="glow-on-hover" type="button">View All Classes</button>
                 </a>
             {{ else }}
-                <a href="/biddingDashboard?filtered=true">
+                <a href="/biddingDashboard/{{ .StudentID }}?filtered=true">
                     <button class="glow-on-hover" type="button">View Your Bids</button>
                 </a>
             {{ end }}

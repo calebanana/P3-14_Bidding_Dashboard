@@ -15,8 +15,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const classAPI string = "http://localhost:8041/api/v1/classes/"
-const biddingAPI string = "http://localhost:8221/api/v1/bid/"
+const classAPI string = "http://10.31.11.11:8041/api/v1/classes/"
+const biddingAPI string = "http://10.31.11.11:8221/api/v1/bid/"
+const walletAPI string = "http://10.31.11.11:8052/"
 
 var student string
 var etiTokens int
@@ -68,6 +69,13 @@ type Semester struct {
 	SemesterModules   []Module
 }
 
+type WalletInfo struct {
+    WalletID     string `json:"wid"`
+    TickerSymbol string `json:"tks"`
+    TokenAmount  int    `json:"ta"`
+    StudentID    string `json:"stuid"`
+}
+
 //////////////////////////////////
 //                              //
 //          TEMP STUFF          //
@@ -80,7 +88,7 @@ func tempLogin(w http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(w, nil)
 	} else {
 		student = r.FormValue("studentid")
-		http.Redirect(w, r, "/biddingDashboard", http.StatusFound)
+		http.Redirect(w, r, "/biddingDashboard/" + student, http.StatusFound)
 	}
 }
 
@@ -91,8 +99,10 @@ func tempLogin(w http.ResponseWriter, r *http.Request) {
 //////////////////////////////////
 
 func biddingDashboard(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
 	query := r.URL.Query()
 	filtered := query.Get("filtered")
+	student = params["studentId"] 
 
 	// temp --------------------------------------------------------------------------------------
 	if student == "S001" {
@@ -109,6 +119,29 @@ func biddingDashboard(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(byteValue, &infoSem)
 	// temp end -----------------------------------------------------------------------------------
 
+	// get number of eti tokens
+	fmt.Println("GET FROM WALLET ", walletAPI + student + "/Wallet/ETI")
+	// walletAPIresponse, _ := http.Get(walletAPI + student + "/Wallet/ETI")
+	// walletData, _ := ioutil.ReadAll(walletAPIresponse.Body)
+
+	// var walletInfo WalletInfo
+	// _ = json.Unmarshal([]byte(walletData), &walletInfo)
+
+	// walletAPIresponse.Body.Close()
+
+	// etiTokens = walletInfo.TokenAmount
+
+	// get all classes from class api
+	fmt.Println("GET FROM CLASS ", classAPI + semStartDate)
+	// classAPIresponse, _ := http.Get(classAPI + semStartDate)
+	// infoSemData, _ := ioutil.ReadAll(classAPIresponse.Body)
+
+	// // var infoSem Info_Semester
+	// _ = json.Unmarshal([]byte(infoSemData), &infoSem)
+
+	// classAPIresponse.Body.Close()	
+
+	// get all bids for student
 	biddingAPIresponse, _ := http.Get(biddingAPI + semStartDate + "?studentId=" + student)
 	semData, _ := ioutil.ReadAll(biddingAPIresponse.Body)
 	var sem Semester
@@ -154,6 +187,7 @@ func biddingDashboard(w http.ResponseWriter, r *http.Request) {
 		displaySem = sem
 	}
 
+	// calculate total student bids
 	totalStudentBids = 0
 	for _, mod := range sem.SemesterModules{
 		for _, cls := range mod.ModuleClasses{
@@ -165,15 +199,7 @@ func biddingDashboard(w http.ResponseWriter, r *http.Request) {
 	etiTokens -= totalStudentBids
 
 	if r.Method == "GET" {
-		tmpl := template.Must(template.ParseFiles("web/biddingDashboard.html"))
-
-		//classAPIresponse, _ := http.Get(classAPI + semStartDate)
-		//infoSemData, _ := ioutil.ReadAll(classAPIresponse.Body)
-
-		// var infoSem Info_Semester
-		// _ = json.Unmarshal([]byte(infoSemData), &infoSem)
-
-		// classAPIresponse.Body.Close()		
+		tmpl := template.Must(template.ParseFiles("web/biddingDashboard.html"))	
 
 		data := map[string]interface{}{
 			"StudentID": student,
@@ -280,7 +306,7 @@ func editBid(w http.ResponseWriter, r *http.Request) {
 			response, _ := http.Post(biddingAPI + semStartDate + "?classCode=" + classCode + "&studentId=" + editBid.StudentID, "application/json", bytes.NewBuffer(editBid_json))
 			response.Body.Close()
 
-			http.Redirect(w, r, "/biddingDashboard", http.StatusFound)
+			http.Redirect(w, r, "/biddingDashboard/" + student, http.StatusFound)
 
 		} else if studentBid.BidAmt > 0 && editBid.BidAmt == 0 {
 			http.Redirect(w, r, "/deleteBid/" + classCode + "/" + studentBid.StudentID, http.StatusFound)
@@ -298,7 +324,7 @@ func editBid(w http.ResponseWriter, r *http.Request) {
 
 			response.Body.Close()
 
-			http.Redirect(w, r, "/biddingDashboard", http.StatusFound)
+			http.Redirect(w, r, "/biddingDashboard/" + student, http.StatusFound)
 		}
 	}
 }
@@ -351,7 +377,7 @@ func deleteBid(w http.ResponseWriter, r *http.Request) {
 
 	response.Body.Close()
 	
-	http.Redirect(w, r, "/biddingDashboard", http.StatusFound)
+	http.Redirect(w, r, "/biddingDashboard/" + student, http.StatusFound)
 }
 
 func main() {
@@ -359,7 +385,7 @@ func main() {
 
 	router.HandleFunc("/", tempLogin)
 
-	router.HandleFunc("/biddingDashboard", biddingDashboard)
+	router.HandleFunc("/biddingDashboard/{studentId}", biddingDashboard)
 	router.HandleFunc("/editBid/{classCode}", editBid)
 	router.HandleFunc("/viewAll/{classCode}", viewAll)
 	router.HandleFunc("/deleteBid/{classCode}/{studentId}", deleteBid)
