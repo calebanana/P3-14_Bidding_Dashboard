@@ -37,7 +37,7 @@ type Semester struct {
 func GetAllBids(inputSemStartDate string, inputClassCode string, inputStudentId string, filtered string) Semester{
 
 	fmt.Println(inputSemStartDate, inputStudentId, inputClassCode)
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://10.31.11.11:8222"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -144,7 +144,7 @@ func GetAllBids(inputSemStartDate string, inputClassCode string, inputStudentId 
 }
 
 func AddNewSemester(inputNewSemester Semester) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://10.31.11.11:8222"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -189,7 +189,7 @@ func AddNewSemester(inputNewSemester Semester) {
 }
 
 func AddNewBid(inputSemStartDate string, inputClassCode string, inputStudentId string, inputBidAmt int32) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://10.31.11.11:8222"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -219,7 +219,7 @@ func AddNewBid(inputSemStartDate string, inputClassCode string, inputStudentId s
 }
 
 func EditBid(inputSemStartDate string, inputClassCode string, inputStudentId string, inputBidAmt int32) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://10.31.11.11:8222"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -255,7 +255,7 @@ func EditBid(inputSemStartDate string, inputClassCode string, inputStudentId str
 }
 
 func DeleteBid(inputSemStartDate string, inputClassCode string, inputStudentId string) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://10.31.11.11:8222"))
 	if err != nil {
 		log.Fatal(err)
 	}

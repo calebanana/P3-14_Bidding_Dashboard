@@ -8,16 +8,18 @@ import (
 	"time"
 	"encoding/json"
 	"io/ioutil"
-	"os"
+	//"os"
 	"sort"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/go-co-op/gocron"
 )
 
 const classAPI string = "http://10.31.11.11:8041/api/v1/classes/"
 const biddingAPI string = "http://10.31.11.11:8221/api/v1/bid/"
 const walletAPI string = "http://10.31.11.11:8052/"
+const transactionAPI string = "http://10.31.11.11:8053/Transaction/new"
 
 var student string
 var etiTokens int
@@ -70,10 +72,21 @@ type Semester struct {
 }
 
 type WalletInfo struct {
-    WalletID     string `json:"wid"`
-    TickerSymbol string `json:"tks"`
-    TokenAmount  int    `json:"ta"`
-    StudentID    string `json:"stuid"`
+    WalletID     string `json:"WalletID"`
+    TickerSymbol string `json:"TickerSymbol"`
+    TokenAmount  int    `json:"TokenAmount"`
+    StudentID    string `json:"StudentID"`
+}
+
+type TransactionInfo struct {
+    TransactionID   string `json:"tid,omitempty" `
+    TransactionType string `json:"ttype"`
+    SenderID        string `json:"sid"`
+    RecieverID      string `json:"rid"`
+    Timestamp       string `json:"ts"`
+    TickerSymbol    string `json:"tsym"`
+    TokenAmount     int `json:"ta"`
+    Status          string `json:"stat"`
 }
 
 //////////////////////////////////
@@ -105,41 +118,38 @@ func biddingDashboard(w http.ResponseWriter, r *http.Request) {
 	student = params["studentId"] 
 
 	// temp --------------------------------------------------------------------------------------
-	if student == "S001" {
-		etiTokens = 100
-	} else if student == "S002" {
-		etiTokens = 150
-	} else {
-		etiTokens = 50
-	}
+	// if student == "S0001" {
+	// 	etiTokens = 100
+	// } else if student == "S0002" {
+	// 	etiTokens = 150
+	// } else {
+	// 	etiTokens = 50
+	// }
 
-	jsonFile, _ := os.Open("../BiddingAPI/sampleClasses.json")
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	var infoSem Info_Semester
-	json.Unmarshal(byteValue, &infoSem)
+	// jsonFile, _ := os.Open("sampleClasses.json")
+	// byteValue, _ := ioutil.ReadAll(jsonFile)
+	// var infoSem Info_Semester
+	// json.Unmarshal(byteValue, &infoSem)
 	// temp end -----------------------------------------------------------------------------------
 
 	// get number of eti tokens
 	fmt.Println("GET FROM WALLET ", walletAPI + student + "/Wallet/ETI")
-	// walletAPIresponse, _ := http.Get(walletAPI + student + "/Wallet/ETI")
-	// walletData, _ := ioutil.ReadAll(walletAPIresponse.Body)
+	walletAPIresponse, _ := http.Get(walletAPI + student + "/Wallet/ETI")
+	walletData, _ := ioutil.ReadAll(walletAPIresponse.Body)
 
-	// var walletInfo WalletInfo
-	// _ = json.Unmarshal([]byte(walletData), &walletInfo)
+	var walletInfo WalletInfo
+	_ = json.Unmarshal([]byte(walletData), &walletInfo)
+	walletAPIresponse.Body.Close()
 
-	// walletAPIresponse.Body.Close()
-
-	// etiTokens = walletInfo.TokenAmount
+	etiTokens = walletInfo.TokenAmount
 
 	// get all classes from class api
 	fmt.Println("GET FROM CLASS ", classAPI + semStartDate)
-	// classAPIresponse, _ := http.Get(classAPI + semStartDate)
-	// infoSemData, _ := ioutil.ReadAll(classAPIresponse.Body)
-
-	// // var infoSem Info_Semester
-	// _ = json.Unmarshal([]byte(infoSemData), &infoSem)
-
-	// classAPIresponse.Body.Close()	
+	classAPIresponse, _ := http.Get(classAPI + semStartDate)
+	infoSemData, _ := ioutil.ReadAll(classAPIresponse.Body)
+	var infoSem Info_Semester
+	_ = json.Unmarshal([]byte(infoSemData), &infoSem)
+	classAPIresponse.Body.Close()	
 
 	// get all bids for student
 	biddingAPIresponse, _ := http.Get(biddingAPI + semStartDate + "?studentId=" + student)
@@ -150,38 +160,47 @@ func biddingDashboard(w http.ResponseWriter, r *http.Request) {
 
 	var displayInfoSem Info_Semester
 	var displaySem Semester
+
+	// view student bids
 	if filtered == "true"{
-		var displayInfoMods []Info_Module
-		for modIndex, mod := range sem.SemesterModules{
-			var infoModClasses []Info_Class
-			for clsIndex, cls := range mod.ModuleClasses{
-				if len(cls.ClassBids) != 0{
-					var displayInfoCls = infoSem.SemesterModules[modIndex].ModuleClasses[clsIndex]
-					fmt.Println(displayInfoCls)
-					infoModClasses = append(infoModClasses, displayInfoCls)
-				}
-			}
-			var displayInfoMod = Info_Module{
-				ModuleCode: mod.ModuleCode,
-				ModuleName: mod.ModuleName,
-				ModuleClasses: infoModClasses,
-			}
-
-			if len(displayInfoMod.ModuleClasses) > 0{
-				displayInfoMods = append(displayInfoMods, displayInfoMod)
-			}
-		}
-		displayInfoSem = Info_Semester{
-			SemesterStartDate: semStartDate,
-			SemesterModules: displayInfoMods,
-		}
-
 		biddingAPIresponse, _ := http.Get(biddingAPI + semStartDate + "?studentId=" + student + "&filtered=true")
 		displaySemData, _ := ioutil.ReadAll(biddingAPIresponse.Body)
 		_ = json.Unmarshal([]byte(displaySemData), &displaySem)
 		biddingAPIresponse.Body.Close()
-		fmt.Println(displayInfoSem, "\n\n")
-		fmt.Println(displaySem)
+
+		var stdMods []Module
+		for _, module := range displaySem.SemesterModules{
+			stdMods = append(stdMods, module)
+		}
+
+		var displayInfoMods []Info_Module
+		
+		for _, stdMod := range stdMods{
+			var displayInfoClasses []Info_Class
+
+			for _, stdCls := range stdMod.ModuleClasses{
+				var displayInfoCls Info_Class
+				classAPIresponse, _ := http.Get(classAPI + semStartDate + "?classCode=" + stdCls.ClassCode)
+				displayInfoClsData, _ := ioutil.ReadAll(classAPIresponse.Body)
+				_ = json.Unmarshal([]byte(displayInfoClsData), &displayInfoCls)
+				classAPIresponse.Body.Close()
+
+				displayInfoClasses = append(displayInfoClasses, displayInfoCls)
+			}
+
+			displayInfoMod := Info_Module{
+				ModuleCode: stdMod.ModuleCode,
+				ModuleName: stdMod.ModuleName,
+				ModuleClasses: displayInfoClasses,
+			}
+
+			displayInfoMods = append(displayInfoMods, displayInfoMod)
+		}
+
+		displayInfoSem = Info_Semester{
+			SemesterStartDate: semStartDate,
+			SemesterModules: displayInfoMods,
+		}
 	} else {
 		displayInfoSem = infoSem
 		displaySem = sem
@@ -212,28 +231,20 @@ func biddingDashboard(w http.ResponseWriter, r *http.Request) {
 
 		tmpl.Execute(w, data)
 	} else if r.Method == "POST"{
+		// search for modules
 		moduleSearch := r.FormValue("moduleSearch")
 
 		if moduleSearch != "all"{
 			var displayInfoMods []Info_Module
-			var displayMods []Module
-			for modIndex, mod := range sem.SemesterModules{
+			for _, mod := range infoSem.SemesterModules{
 				if mod.ModuleCode == moduleSearch{
-					infoMod := infoSem.SemesterModules[modIndex]
-					displayInfoMods = append(displayInfoMods, infoMod)
-
-					mod := sem.SemesterModules[modIndex]
-					displayMods = append(displayMods, mod)
+					displayInfoMods = append(displayInfoMods, mod)
 				}
 			}
+
 			displayInfoSem = Info_Semester{
 				SemesterStartDate: semStartDate,
 				SemesterModules: displayInfoMods,
-			}
-
-			displaySem = Semester{
-				SemesterStartDate: semStartDate,
-				SemesterModules: displayMods,
 			}
 		} else {
 			displayInfoSem = infoSem
@@ -380,11 +391,98 @@ func deleteBid(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/biddingDashboard/" + student, http.StatusFound)
 }
 
+func createEmptyClasses(w http.ResponseWriter, r *http.Request) {
+
+	classAPIresponse, _ := http.Get(classAPI + semStartDate)
+	infoSemData, _ := ioutil.ReadAll(classAPIresponse.Body)
+	var infoSem Info_Semester
+	_ = json.Unmarshal([]byte(infoSemData), &infoSem)
+	classAPIresponse.Body.Close()
+
+	var semesterModules []Module
+	for _, infoMod := range infoSem.SemesterModules{
+		var moduleClasses []Class
+		for _, infoCls := range infoMod.ModuleClasses{
+			var classBids []Bid
+			class := Class{
+				ClassCode: infoCls.ClassCode,
+				ClassBids: classBids,
+			}
+			moduleClasses = append(moduleClasses, class)
+		}
+
+		module := Module{
+			ModuleCode: infoMod.ModuleCode,
+			ModuleName: infoMod.ModuleName,
+			ModuleClasses: moduleClasses,
+		}
+		semesterModules = append(semesterModules, module)
+	}
+
+	semester := Semester{
+		SemesterStartDate: semStartDate,
+		SemesterModules: semesterModules,
+	}
+
+	semester_json, _ := json.Marshal(semester)
+	response, _ := http.Post(biddingAPI + semStartDate, "application/json", bytes.NewBuffer(semester_json))
+	response.Body.Close()
+
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func sendBids() {
+	var studentArr []string
+	studentArr = append(studentArr, "S0001")
+	studentArr = append(studentArr, "S0002")
+	studentArr = append(studentArr, "S0003")
+	
+	for _, std := range studentArr{
+		var stdSem Semester
+		biddingAPIresponse, _ := http.Get(biddingAPI + semStartDate + "?studentId=" + std + "&filtered=true")
+		stdSemData, _ := ioutil.ReadAll(biddingAPIresponse.Body)
+		_ = json.Unmarshal([]byte(stdSemData), &stdSem)
+		biddingAPIresponse.Body.Close()
+
+		// add total bids for student
+		stdTotalBids := 0
+		for _, mod := range stdSem.SemesterModules {
+			for _, class := range mod.ModuleClasses {
+				stdTotalBids += class.ClassBids[0].BidAmt
+			}
+		}
+
+		currentDateTime := time.Now().In(time.FixedZone("UTC+8", 8*60*60))
+    	formattedDT := fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d", currentDateTime.Year(), currentDateTime.Month(), currentDateTime.Day(),currentDateTime.Hour(), currentDateTime.Minute(), currentDateTime.Second())
+
+		transactionDetails := TransactionInfo{
+            TransactionType: "Bidding",
+            SenderID: "Bidding",
+            RecieverID: std,
+            Timestamp: formattedDT,
+            TickerSymbol: "ETI",
+            TokenAmount: -stdTotalBids,
+            Status: "ping",
+		}
+        
+        transactionToAdd, _ := json.Marshal(transactionDetails)
+
+        http.Post(transactionAPI, "application/json", bytes.NewBuffer(transactionToAdd))
+	}
+}
+
 func main() {
+
+	s := gocron.NewScheduler(time.UTC)
+	job, _ := s.Every(1).Day().Sunday().At("15:58").Do(sendBids)
+	s.StartAsync()
+	fmt.Println(job.ScheduledAtTime())
+	
+	//createEmptyClasses()
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", tempLogin)
-
+	router.HandleFunc("/createClasses", createEmptyClasses)
 	router.HandleFunc("/biddingDashboard/{studentId}", biddingDashboard)
 	router.HandleFunc("/editBid/{classCode}", editBid)
 	router.HandleFunc("/viewAll/{classCode}", viewAll)

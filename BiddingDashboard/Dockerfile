@@ -10,6 +10,7 @@ RUN go mod download
 
 COPY *.go ./
 COPY ./web ./web
+COPY *.json ./
 
 RUN go build -o /BiddingDashboard
 

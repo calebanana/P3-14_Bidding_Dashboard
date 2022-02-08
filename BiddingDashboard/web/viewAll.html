@@ -113,11 +113,13 @@
                 <th>Bid Amount</th>
             </tr>
             {{ $studentID := .StudentID}}
+            {{ $studentBidAmt := 0 }}
             {{ range $bid := .ClassBids }}
                 {{ if eq $bid.StudentID $studentID }}
                     <tr id="yourBid">
                         <td>{{ $bid.BidAmt }} (Your Bid)</td>
                     </tr>
+                    {{ $studentBidAmt = $bid.BidAmt }}
                 {{ else }}
                     <tr>
                         <td>{{ $bid.BidAmt }}</td>
@@ -128,7 +130,7 @@
     </div>
     <br><br>
     <div>
-        {{ if eq .StudentBid.BidAmt 0 }}
+        {{ if eq $studentBidAmt 0 }}
             <a href="/editBid/{{ .ClassCode }}">
                 <button class="glow-on-hover" id="add">Add Bid</button>
             </a>
@@ -138,7 +140,7 @@
             </a>
         {{ end }}
         <br><br>
-        <a href="/biddingDashboard">
+        <a href="/biddingDashboard/{{ .StudentID }}">
             <button class="glow-on-hover" type="button" id="back">Back to Dashboard</button>
         </a>
     </div>
